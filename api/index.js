@@ -5,7 +5,7 @@ const server = http.createServer(app);
 const { Server } = require("socket.io");  
 const io = new Server(server);  
 const path = require('path');  
-const authRouter = require('../src/routes/authRouter');  
+const authRouter = require('../src/routes/authRouter');   
 const userRouter = require('../src/routes/userRouter');  
 const connect = require('../src/db/connect');  
 require('dotenv').config();  

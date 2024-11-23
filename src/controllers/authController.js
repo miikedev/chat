@@ -11,6 +11,7 @@ const register = async (req, res) => {
         }  
         // Create a new user  
         const user = await UserService.createUser(name, email, password);   
+        
         const token = await AuthService.generateToken(user);
 
 
