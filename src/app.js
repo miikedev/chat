@@ -1,49 +1,93 @@
-const express = require('express');
-const app = express();
-const logger = require('./utils/logger')
-// const pinoHttp = require('pino-http');
-const authRouter = require('./routes/AuthRouter')
-const userRouter = require('./routes/UserRouter')
-const connect = require('./db/connect')
-require('dotenv').config();
-const jwtVerifyMiddleware = require('./middleware/authMiddleware')
-// Initialize Firebase Admin SDK
-// admin.initializeApp({
-//   credential: admin.credential.cert('path/to/your/firebase-admin.json'),
-//   databaseURL: 'https://<your-firebase-project-id>.firebaseio.com'
-// });
+const express = require('express');  
+const app = express();  
+const http = require('http');  
+const server = http.createServer(app);  
+const { Server } = require("socket.io");  
+const io = new Server(server);  
+const path = require('path');  
+const authRouter = require('./routes/authRouter');  
+const userRouter = require('./routes/userRouter');  
+const connect = require('./db/connect');  
+require('dotenv').config();  
+const jwtVerifyMiddleware = require('./middleware/authMiddleware');  
+const logger = require('./utils/logger');  
 
-// const db = admin.database();
-// const roomRef = db.ref('rooms/my-chat-room');
+// Serve static files from the 'public' directory (adjust as necessary)  
+app.use(express.static(path.join(__dirname, 'public'))); // Make sure to have a 'public' folder for static files  
+app.use(express.json());  
+app.use(express.urlencoded({ extended: true }));  
 
-// app.post('/messages', (req, res) => {
-//   const message = req.body;
-//   const messageRef = roomRef.child('messages').push();
-//   messageRef.set(message);
-//   res.send('Message sent!');
-// });
-// app.use(pinoHttp({logger}))
-app.use(express.json());
-app.use(express.urlencoded({extended: true}))
+app.get('/api', (req, res) => {  
+    res.json({  
+        success: true,  
+        message: 'Welcome to the Chat App!'  
+    });  
+});  
 
-app.get('/', (req,res) => {
-    res.json({
-        success: true,
-        message: 'Welcome to the Chat App!'
-    })
-})
-app.use('/api/v1', userRouter)
-app.use('/api/v1/auth', authRouter)
+app.get('/', (req, res) => {  
+    logger.info('Welcome to the Chat App');  
+    res.sendFile(path.join(__dirname, 'index.html'));  
+});  
 
-const port = process.env.PORT || 3000;
-const url = process.env.MONGO_URI
+// Use routers for handling user and auth routes  
+app.use('/api/v1', userRouter);  
+app.use('/api/v1/auth', authRouter);  
+const usernames = {};
 
-const start = async(url) => {
-    await connect(url)
-    .then(() => logger.info('Connected to DB'))
-    .finally(() => app.listen(port, () => {
-        logger.info(`Server running on port ${port}`)  // Logs the server's port number to the console when it starts up.  `logger.info` is a pino logger that logs in the console with a timestamp and colorized output.  `info` is the log level for this type of message.  `Server running on port ${port}` is the message that gets logged.  The `finally` block ensures that the connection to the DB is closed even if an error occurs during the server start-up process.  This is a good practice to ensure that resources are properly cleaned up in case of errors.  `app.listen` is a method provided by Express that starts the server and listens for incoming connections on the specified port.  `port` is the port number that the server will be listening on.  `logger.info` is used to log this message.  The `url` variable is the MongoDB connection string that is used
-    }))
-}
+io.on('connection', (socket) => {
+  logger.info(`A user connected: ${socket.id}`);
 
-start(url)
+  socket.on('adduser', (username) => {
+    logger.info(`Add user: ${username}`);
+    socket.username = username;
+    usernames[username] = socket.id;
+    socket.emit('updatechat', 'Chat Bot', `${username}, you have joined the chat`);
+    socket.broadcast.emit('updatechat', 'Chat Bot', `${username} has joined the chat`);
+    io.emit('updateusers', Object.keys(usernames));
+  });
+
+  socket.on('private message', ({ recipient, message }) => {
+    const recipientSocket = usernames[recipient];
+    if (recipientSocket) {
+      logger.info(`Private message from ${socket.username} to ${recipient}: ${message}`);
+      io.to(recipientSocket).emit('private message', {
+        message,
+        from: socket.username,
+      });
+      socket.emit('private message', {
+        message,
+        from: socket.username,
+        to: recipient
+      });
+    } else {
+      socket.emit('updatechat', 'Chat Bot', `User ${recipient} is not online.`);
+    }
+  });
+
+  socket.on('disconnect', () => {
+    logger.info(`User disconnected: ${socket.username}`);
+    if (socket.username) {
+      delete usernames[socket.username];
+      socket.broadcast.emit('updatechat', 'Chat Bot', `${socket.username} has left the chat`);
+      io.emit('updateusers', Object.keys(usernames));
+    }
+  });
+});
+// Server and database connection  
+const port = process.env.PORT || 3000;  
+const url = process.env.MONGO_URI;  
+
+const start = async () => {  
+    try {  
+        await connect(url);  
+        logger.info('Connected to DB');  
+        server.listen(port, () => {  
+            logger.info(`Server running on port ${port}`);  
+        });  
+    } catch (error) {  
+        logger.error('Error connecting to the database:', error);  
+        process.exit(1); // Exit the process if DB connection fails  
+    }  
+};  
+
+start();

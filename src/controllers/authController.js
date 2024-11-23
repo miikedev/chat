@@ -1,4 +1,4 @@
-const UserService = require('../services/UserService');  
+const UserService = require('../services/userService');  
 const AuthService = require('../services/authService');
 const register = async (req, res) => {  
     const { name, email, password } = req.body;  
@@ -10,9 +10,9 @@ const register = async (req, res) => {
             return res.status(400).json({ error: 'Email is already in use.' });  
         }  
         // Create a new user  
+        const user = await UserService.createUser(name, email, password);   
         const token = await AuthService.generateToken(user);
 
-        const user = await UserService.createUser(name, email, password);   
 
         res.status(201).json({ user, token });  
     } catch (error) {  

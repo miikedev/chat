@@ -1,0 +1,141 @@
+<!DOCTYPE html>  
+<html lang="en">  
+<head>  
+    <meta charset="UTF-8">  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">  
+    <title>Private Chat App</title>  
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>     
+<body class="w-full">  
+    <h1 class="text-3xl text-blue-800 font-bold text-center mt-6">Private Chat Application</h1>  
+    <div id="login" class="flex flex-col gap-y-3 py-5 px-3 w-96 mx-auto">  
+        <input class="p-2 border border-1 border-black" type="text" id="username" placeholder="Username" required>  
+        <input class="p-2 border border-1 border-black" type="password" id="password" placeholder="Password" required>  
+        <input class="p-2 border border-1 border-black" type="email" id="email" placeholder="Email" required>
+        <button onclick="login()" class="bg-blue-500 p-2 my-2 font-semibold">Login</button>  
+        <button onclick="register()" class="bg-blue-500 p-2 my-2 font-semibold">Register</button>  
+    </div>  
+    
+    <div id="chat" style="display:none;">  
+        <div class="px-[80px]">
+        <h2 class="text-3xl text-blue-800 font-bold text-center mt-6">Private Chat</h2>  
+        <div class="py-5 px-3 flex flex-col justify-center gap-y-3">
+        <input class="p-2 border border-1 border-black" type="text" id="recipient" placeholder="Recipient Socket ID" required>  
+        <textarea id="message" placeholder="Type your message here" class="py-2 border border-1 border-black"></textarea>  
+        <button onclick="sendMessage()" class="bg-blue-500 p-2 my-2 font-semibold">Send Message</button> 
+        </div> 
+        <div id="messages"></div>  
+        </div>
+    </div>  
+
+    <script>  
+        const socket = io('http://localhost:3000');
+        let currentUser = '';
+
+        async function login() {
+            const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch('http://localhost:3000/api/v1/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, email, password })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    localStorage.setItem('token', data.token);
+                    document.getElementById('login').style.display = 'none';
+                    document.getElementById('chat').style.display = 'block';
+                    currentUser = data.user.name;
+                    socket.emit('adduser', currentUser);
+                } else {
+                    console.error('Failed to login');
+                }
+            } catch (error) {
+                console.error('Error during login:', error);
+            }
+        }
+
+        function sendMessage() {
+            const recipient = document.getElementById('recipient').value;
+            const message = document.getElementById('message').value;
+            if (recipient && message) {
+                socket.emit('private message', { recipient, message });
+                document.getElementById('message').value = '';
+            }
+        }
+
+        function displayMessage(message, from, to) {
+            const div = document.createElement('div');
+            div.textContent = to 
+                ? `You to ${to}: ${message}`
+                : `${from}: ${message}`;
+            document.getElementById('messages').appendChild(div);
+        }
+
+        socket.on('private message', ({ message, from, to }) => {
+            displayMessage(message, from, to);
+        });
+
+        socket.on('updatechat', (from, message) => {
+            displayMessage(message, from);
+        });
+
+        socket.on('updateusers', (userList) => {
+            const select = document.getElementById('recipient');
+            select.innerHTML = '';
+            userList.forEach(user => {
+                if (user !== currentUser) {
+                    const option = document.createElement('option');
+                    option.value = user;
+                    option.textContent = user;
+                    select.appendChild(option);
+                }
+            });
+        });
+    </script>  
+</body>  
+</html>
+<!-- <!DOCTYPE html>
+<html >
+  <head>
+    <meta charset="UTF-8">
+    <title>Socket IO Private Chat Messaging</title>
+    <link rel='stylesheet prefetch' href='https://fonts.googleapis.com/css?family=Open+Sans'>
+	<link rel='stylesheet prefetch' href='https://cdnjs.cloudflare.com/ajax/libs/malihu-custom-scrollbar-plugin/3.1.3/jquery.mCustomScrollbar.min.css'>
+	<link href="https://wmuza.github.io/SocketIO-Chat-App/public/css/normalize.css" rel="stylesheet" type="text/css">
+    <link href="https://wmuza.github.io/SocketIO-Chat-App/public/css/style.css" rel="stylesheet" type="text/css">
+  </head>
+
+  <body>
+		<div class="chat">
+			<div class="chat-title">
+				<h1>We are Online</h1>
+				<figure class="avatar">
+				  <img src="https://wmuza.github.io/SocketIO-Chat-App/public/img/sa.png" />
+				  <span class="chat-message-counter">3</span>
+				</figure>
+				<span class="online-bullet"></span>
+			</div>
+			<div class="messages">
+				<div class="messages-content"></div>
+			</div>
+			<div class="message-box">
+				<textarea type="text" class="message-input" placeholder="Type message..."></textarea>
+				<button type="submit" class="message-submit">Send</button>
+			</div>
+		</div>
+		<div class="bg"></div>
+		
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
+	<script src='https://cdnjs.cloudflare.com/ajax/libs/malihu-custom-scrollbar-plugin/3.1.3/jquery.mCustomScrollbar.concat.min.js'></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.1.1/socket.io.js"></script>
+	<script src="https://wmuza.github.io/SocketIO-Chat-App/public/js/index.js"></script>     
+  </body>
+</html>  -->
