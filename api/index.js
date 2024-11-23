@@ -26,7 +26,7 @@ app.get('/api', (req, res) => {
 
 app.get('/', (req, res) => {  
     logger.info('Welcome to the Chat App');  
-    res.sendFile(path.join(__dirname, 'index.html'));  
+    res.sendFile(path.join(__dirname, '../src/index.html'));  
 });  
 
 // Use routers for handling user and auth routes  
