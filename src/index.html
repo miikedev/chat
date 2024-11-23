@@ -1,37 +1,75 @@
-<!DOCTYPE html>  
-<html lang="en">  
-<head>  
-    <meta charset="UTF-8">  
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">  
-    <title>Private Chat App</title>  
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Chat Application</title>
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>     
-<body class="w-full">  
-    <h1 class="text-3xl text-blue-800 font-bold text-center mt-6">Private Chat Application</h1>  
-    <div id="login" class="flex flex-col gap-y-3 py-5 px-3 w-96 mx-auto">  
-        <input class="p-2 border border-1 border-black" type="text" id="username" placeholder="Username" required>  
-        <input class="p-2 border border-1 border-black" type="password" id="password" placeholder="Password" required>  
-        <input class="p-2 border border-1 border-black" type="email" id="email" placeholder="Email" required>
-        <button onclick="login()" class="bg-blue-500 p-2 my-2 font-semibold">Login</button>  
-        <button onclick="register()" class="bg-blue-500 p-2 my-2 font-semibold">Register</button>  
-    </div>  
-    
-    <div id="chat" style="display:none;">  
-        <div class="px-[80px]">
-        <h2 class="text-3xl text-blue-800 font-bold text-center mt-6">Private Chat</h2>  
-        <div class="py-5 px-3 flex flex-col justify-center gap-y-3">
-        <input class="p-2 border border-1 border-black" type="text" id="recipient" placeholder="Recipient Socket ID" required>  
-        <textarea id="message" placeholder="Type your message here" class="py-2 border border-1 border-black"></textarea>  
-        <button onclick="sendMessage()" class="bg-blue-500 p-2 my-2 font-semibold">Send Message</button> 
-        </div> 
-        <div id="messages"></div>  
-        </div>
-    </div>  
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        #login, #chat {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            box-sizing: border-box;
+        }
+        #messages {
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            #messages {
+                height: 200px;
+            }
+        }
+        .title {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="title">Chat APPLICATION</div>
+    <div id="login">
+        <input type="text" id="username" placeholder="Username">
+        <input type="email" id="email" placeholder="Email">
+        <input type="password" id="password" placeholder="Password">
+        <button id="loginButton">Login</button>
+    </div>
 
-    <script>  
-        const socket = io('http://localhost:3000');
+    <div id="chat" style="display: none;">
+        <div id="messages"></div>
+        <select id="recipient"></select>
+        <input type="text" id="message" placeholder="Type a message">
+        <button id="sendButton">Send</button>
+    </div>
+
+    <script>
+        const socket = io('http://localhost:3000', {
+            transports: ['websocket', 'polling'],
+            timeout: 10000,
+            reconnectionAttempts: 5
+        });
         let currentUser = '';
+
+        document.getElementById('loginButton').addEventListener('click', login);
+        document.getElementById('sendButton').addEventListener('click', sendMessage);
 
         async function login() {
             const username = document.getElementById('username').value;
@@ -55,10 +93,11 @@
                     currentUser = data.user.name;
                     socket.emit('adduser', currentUser);
                 } else {
-                    console.error('Failed to login');
+                    alert('Failed to login. Please try again.');
                 }
             } catch (error) {
                 console.error('Error during login:', error);
+                alert('An error occurred. Please try again.');
             }
         }
 
@@ -77,7 +116,17 @@
                 ? `You to ${to}: ${message}`
                 : `${from}: ${message}`;
             document.getElementById('messages').appendChild(div);
+            document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
         }
+
+        socket.on('connect', () => {
+            console.log('Connected to server');
+        });
+
+        socket.on('connect_error', (error) => {
+            console.error('Connection error:', error);
+            alert('Unable to connect to the chat server. Please check your internet connection and try again.');
+        });
 
         socket.on('private message', ({ message, from, to }) => {
             displayMessage(message, from, to);
@@ -99,43 +148,6 @@
                 }
             });
         });
-    </script>  
-</body>  
+    </script>
+</body>
 </html>
-<!-- <!DOCTYPE html>
-<html >
-  <head>
-    <meta charset="UTF-8">
-    <title>Socket IO Private Chat Messaging</title>
-    <link rel='stylesheet prefetch' href='https://fonts.googleapis.com/css?family=Open+Sans'>
-	<link rel='stylesheet prefetch' href='https://cdnjs.cloudflare.com/ajax/libs/malihu-custom-scrollbar-plugin/3.1.3/jquery.mCustomScrollbar.min.css'>
-	<link href="https://wmuza.github.io/SocketIO-Chat-App/public/css/normalize.css" rel="stylesheet" type="text/css">
-    <link href="https://wmuza.github.io/SocketIO-Chat-App/public/css/style.css" rel="stylesheet" type="text/css">
-  </head>
-
-  <body>
-		<div class="chat">
-			<div class="chat-title">
-				<h1>We are Online</h1>
-				<figure class="avatar">
-				  <img src="https://wmuza.github.io/SocketIO-Chat-App/public/img/sa.png" />
-				  <span class="chat-message-counter">3</span>
-				</figure>
-				<span class="online-bullet"></span>
-			</div>
-			<div class="messages">
-				<div class="messages-content"></div>
-			</div>
-			<div class="message-box">
-				<textarea type="text" class="message-input" placeholder="Type message..."></textarea>
-				<button type="submit" class="message-submit">Send</button>
-			</div>
-		</div>
-		<div class="bg"></div>
-		
-    <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
-	<script src='https://cdnjs.cloudflare.com/ajax/libs/malihu-custom-scrollbar-plugin/3.1.3/jquery.mCustomScrollbar.concat.min.js'></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.1.1/socket.io.js"></script>
-	<script src="https://wmuza.github.io/SocketIO-Chat-App/public/js/index.js"></script>     
-  </body>
-</html>  -->
