@@ -5,7 +5,7 @@ const server = http.createServer(app);
 const { Server } = require("socket.io");  
 const io = new Server(server,{
     cors: {
-        origin: "https://chat-app-teehtwin.com"
+        origin: "https://chat-app-teehtwin.vercel.app"
     }
 });  
 const path = require('path');  
