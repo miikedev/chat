@@ -3,6 +3,7 @@ const app = express();
 const http = require('http');  
 const server = http.createServer(app);  
 const { Server } = require("socket.io");  
+const cors = require('cors'); 
 const io = new Server(server,{
     cors: {
         origin: "https://chat-app-teehtwin.vercel.app"
@@ -16,7 +17,8 @@ require('dotenv').config();
 const jwtVerifyMiddleware = require('../src/middleware/authMiddleware');  
 const logger = require('../src/utils/logger');  
 
-// Serve static files from the 'public' directory (adjust as necessary)  
+// Serve static files from the 'public' directory (adjust as necessary) 
+app.use(cors()); 
 app.use(express.static(path.join(__dirname, 'public'))); // Make sure to have a 'public' folder for static files  
 app.use(express.json());  
 app.use(express.urlencoded({ extended: true }));  
