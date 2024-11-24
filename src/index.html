@@ -97,7 +97,7 @@
 
         function connectSocket() {
             socket = io(BACKEND_URL, {
-                transports: ['websocket'],
+                transports: ['websocket', 'polling'],
                 timeout: 10000,
                 reconnectionAttempts: 5
             });
@@ -196,4 +196,3 @@
     </script>
 </body>
 </html>
-

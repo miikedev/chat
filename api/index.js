@@ -11,7 +11,7 @@ const connect = require('../src/db/connect');
 const logger = require('../src/utils/logger');  
 require('dotenv').config();  
 
-const allowedOrigins = ['https://chat-app-teehtwin.vercel.app'];
+const allowedOrigins = ['https://chat-app-teehtwin.vercel.app','wss://chat-app-teehtwin.vercel'];
 
 app.use(cors({
   origin: function(origin, callback) {
