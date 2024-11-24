@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Chat Application</title>
-    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -90,6 +89,7 @@
             <div id="connectionStatus">Disconnected</div>
         </div>
     </div>
+    <script src="/socket.io/socket.io.js"></script>
     <script>
         const BACKEND_URL = 'https://chat-app-teehtwin.vercel.app';
         let socket;
