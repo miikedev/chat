@@ -22,7 +22,11 @@ const jwtVerifyMiddleware = require('../src/middleware/authMiddleware');
 const logger = require('../src/utils/logger');  
 
 // Serve static files from the 'public' directory (adjust as necessary) 
-app.use(cors()); 
+app.use(cors({
+    origin: "https://chat-app-teehtwin.vercel.app",
+    methods: ["GET", "POST"],
+    credentials: true
+  }));
 app.use(express.static(path.join(__dirname, 'public'))); // Make sure to have a 'public' folder for static files  
 app.use(express.json());  
 app.use(express.urlencoded({ extended: true }));  
