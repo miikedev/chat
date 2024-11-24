@@ -4,11 +4,15 @@ const http = require('http');
 const server = http.createServer(app);  
 const { Server } = require("socket.io");  
 const cors = require('cors'); 
-const io = new Server(server,{
+const io = new Server(server, {
     cors: {
-        origin: "https://chat-app-teehtwin.vercel.app"
-    }
-});  
+      origin: "https://chat-app-teehtwin.vercel.app",
+      methods: ["GET", "POST"],
+      credentials: true
+    },
+    pingTimeout: 60000,
+    pingInterval: 25000
+  });
 const path = require('path');  
 const authRouter = require('../src/routes/authRouter');   
 const userRouter = require('../src/routes/userRouter');  
