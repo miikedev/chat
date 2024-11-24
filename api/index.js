@@ -8,12 +8,10 @@ const path = require('path');
 const authRouter = require('../src/routes/authRouter');   
 const userRouter = require('../src/routes/userRouter');  
 const connect = require('../src/db/connect');  
-require('dotenv').config();  
-const jwtVerifyMiddleware = require('../src/middleware/authMiddleware');  
 const logger = require('../src/utils/logger');  
+require('dotenv').config();  
 
-
-const allowedOrigins = ['http://localhost:3000', 'https://chat-app-teehtwin.vercel.app'];
+const allowedOrigins = ['https://chat-app-teehtwin.vercel.app'];
 
 app.use(cors({
   origin: function(origin, callback) {
