@@ -25,6 +25,27 @@ const getUser = async (req, res) => {
     }
 }
 
+const activeUsers = async (req, res) => {
+    try {
+        const users = await User.find({ isActive: true });
+        res.status(200).json(users);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+
+async function findUserByPhone(phone) {
+    try {
+      const user = await User.findOne({ phone: phone, active: true }).select('name phone email active');
+      if (!user) {
+        return { success: false, message: 'User not found' };
+      }
+      return { success: true, user };
+    } catch (error) {
+      throw new Error('Error finding user: ' + error.message);
+    }
+  }
+
 const updateUser = async (req, res) => {
     const userId = req.params.id;
     const { name, email, password } = req.body;
@@ -48,4 +69,4 @@ const deleteUser = async (req, res) => {
     }
 }
 
-module.exports = { createUser, getUser, updateUser, deleteUser };
+module.exports = { createUser, activeUsers, findUserByPhone, getUser, updateUser, deleteUser };
