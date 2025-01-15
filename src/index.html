@@ -92,11 +92,12 @@
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const BACKEND_URL = 'http://localhost:3000';
+
         let socket;
         let currentUser = '';
 
         function connectSocket() {
-            socket = io(BACKEND_URL, {
+            socket = io(WEBSOCKET_URL, {
                 transports: ['websocket', 'polling'],
                 timeout: 10000,
                 reconnectionAttempts: 5
